@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Uncovering Language, Tutorial 2 Group 2.</title>
+  <script src="https://unpkg.com/jspsych@7.2.1"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.0"></script>
+  <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    p.stim {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      width: 800px;
+      font-size: 30px;
+      font-weight: bold;
+      line-height: 130%;
+      font-family: 'Microsoft JhengHei', '微軟正黑體';
+    }
+
+    p.nav {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      width: 800px;
+      font-size: 36px;
+      font-weight: bold;
+      line-height: 130%;
+      font-family: 'Microsoft JhengHei', '微軟正黑體';
+      color: lightgrey;
+    }
+
+    p.Instruction {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      width: 800px;
+      font-size: 32px;
+      font-style: italic;
+      line-height: 150%;
+      font-family: 'Microsoft JhengHei', '微軟正黑體';
+    }
+
+    /* div.timer_bar_outline{
+        margin-left: auto;
+        margin-right: auto;
+        height: 24px;
+        width: 800px;
+        background-color: lightgray;
+        position:absolute;
+        bottom: 100px;
+      }
+      div.timer_bar_inner{
+        margin-left: auto;
+        margin-right: auto;
+        height: 24px;
+        width:0%;
+        background-color: black;
+        position:absolute;
+        bottom:0px;
+      } */
+  </style>
+</head>
+
+<body>
+
+</body>
+<script>
+  function progress() {
+    var elem = document.getElementById('timer');
+    var width = 0;
+    var id = setInterval(frame, 100);
+    function frame() {
+      if (width >= 100) {
+        clearInterval(id);
+      } else {
+        width = width + 10 / 7;
+        elem.style.width = width * 800 + 'px';
+      }
+    }
+  }
+  const jsPsych = initJsPsych({
+    minimum_valid_rt: 200,
+    show_progress_bar: true,
+    auto_update_progress_bar: false,
+    message_progress_bar: '進度條'
+  });
+
+  var timeline = [];
+
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true,
+    message: `<p class='Instruction'>請按下按鍵以進入全螢幕模式</p>`,
+    button_label: '全螢幕',
+    on_start: function () {
+      jsPsych.setProgressBar(0);
+    }
+  });
+
+  /*welcome page of expeiment*/
+  const Starting_Page = {
+    type: jsPsychInstructions,
+    pages: [
+      "<p class='Instruction'>您好，謝謝您抽空參與本實驗。<br><br>" +
+      "本實驗的內容如下，您將會閱讀 24 篇 50-70 字的文章，每篇文章閱讀的時間為 7 秒鐘。接著請回答兩題與文章內容有關的是非題。<br><br>如若題目敘述正確，請按下鍵盤【F】鍵；<br>而若題目敘述錯誤，請按下鍵盤【J】鍵。<br><br>" +
+      "將下來將會有一題示範，使您熟悉本實驗的進行方式。<br><br>請按下方的【下一頁】按鍵以進入示範題。</p>"
+    ],
+    show_clickable_nav: true,
+    button_label_previous: '上一頁',
+    button_label_next: '下一頁'
+  };
+  timeline.push(Starting_Page);
+
+  var pretest_stimuli = [
+    { stimulus: '這是一篇 50-70 字的文章，每篇文章閱讀的時間為 7 秒鐘。請詳閱內容以回答接下來的是非問題（F 表示題目敘述正確，J 表示題目敘述有誤）。', Q1: '上述內容說明實驗的進行方式。（此題敘述正確，請按下 F）', Q1_correct_response: 'f', Q2: '若題目正確，應該按下J。（此題敘述錯誤，請按下 J）', Q2_correct_response: 'j', No: '0' }
+  ]
+
+  var pretest_procedure = {
+    timeline: [
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: '<div style="font-size:60px;">+</div>',
+        choices: "NO_KEYS",
+        trial_duration: 500,
+        post_trial_gap: 100
+      },
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+          var stim = `<p class='stim'>${jsPsych.timelineVariable('stimulus')}</p>`;
+          return stim;
+        },
+        choices: "NO_KEYS",
+        data: {
+          task: 'show_stimulus',
+          correct_response: 'N/A',
+          No: jsPsych.timelineVariable('No')
+        },
+        trial_duration: 7000,
+        post_trial_gap: 100
+      },
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+          var stim = `<p class='stim'>${jsPsych.timelineVariable('Q1')}</p>
+                              <p class='nav'>【正確】 F&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;【錯誤】 J</p>`;
+          return stim;
+        },
+        choices: ['f', 'j'],
+        data: {
+          task: 'pretest',
+          correct_response: jsPsych.timelineVariable('Q1_correct_response'),
+          No: jsPsych.timelineVariable('No')
+        },
+        on_finish: function (data) {
+          data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        },
+        trial_duration: undefined,
+        post_trial_gap: 500
+      },
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+          var stim = `<p class='stim'>${jsPsych.timelineVariable('Q2')}</p>
+                              <p class='nav'>【正確】 F&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;【錯誤】 J</p>`;
+          return stim;
+        },
+        choices: ['f', 'j'],
+        data: {
+          task: 'pretest',
+          correct_response: jsPsych.timelineVariable('Q2_correct_response'),
+          No: jsPsych.timelineVariable('No')
+        },
+        on_finish: function (data) {
+          data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        },
+        trial_duration: undefined,
+        post_trial_gap: 500
+      }
+    ],
+    timeline_variables: pretest_stimuli
+  }
+  timeline.push(pretest_procedure);
+
+  var pretest_debrief_block = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: function () {
+
+      var trials = jsPsych.data.get().filter({ task: 'pretest' });
+      var correct_trials = trials.filter({ correct: true });
+      var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+
+      return `<p class='Instruction'>您的回應正確率為 ${accuracy}%。</p>
+          <p class='Instruction'>請按下鍵盤任意按鍵以完成示範題！感謝您！</p>`;
+
+    }
+  };
+  timeline.push(pretest_debrief_block);
+
+  var before_experiment_start = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<p class="Instruction">以上是實驗的進行方式，如果您已經準備好進行實驗，請按下【F】鍵以開始正式實驗。</p>',
+    choices: ["f"],
+    trial_duration: undefined
+  }
+  timeline.push(before_experiment_start)
+
+  var n_trials = 24;
+  var full_stimuli = [
+    {
+      stimulus: '種植柑橘的農夫在霜害來臨前保護好果樹；災害應變中心在野火蔓延前會疏散風下處的鎮鄉；河岸兩側的社區在大雨來襲前會準備好包砂堆在商店和住家前。',
+      Q1: '向風處鄉鎮在野火蔓延前可以不用撤離。',
+      Q1_correct_response: 'j',
+      Q2: '人們會使用砂包來防洪。',
+      Q2_correct_response: 'f',
+      No: '1',
+      Pattern: '詞內調換*3'
+    },
+
+    {
+      stimulus: '生活中有許多事物可能會對我們形成壓力，例如碌忙的工作、人與人之間的相處摩擦、環境或經濟變化，是都一般人有常的壓力來源。',
+      Q1: '文中提及學生的課業壓力是常見的壓力來源。',
+      Q1_correct_response: 'j',
+      Q2: '文中敘述人與人相處是一般人常見的壓力來源之一。',
+      Q2_correct_response: 'f',
+      No: '2',
+      Pattern: '詞內調換*3'
+    },
+
+    {
+      stimulus: '環視周圍，險探隊員正幾個人裹著一條毯毛，擠在一起勉強取暖，但分遣所內有溫暖的堆火、食物也還算充足，暫時看起來沒有性命之憂。',
+      Q1: '分遣所內的探索隊員正挨餓受凍。',
+      Q1_correct_response: 'j',
+      Q2: '作者身處在寒冷的環境中。',
+      Q2_correct_response: 'f',
+      No: '3',
+      Pattern: '詞內調換*3'
+    },
+
+    {
+      stimulus: '「校園槍擊事件、自水來有重金屬鉛汙染、薪資低過的教師出走、過時的課程和科技、班大教學，結果我們能做的最好的事情，卻是禁止一本有老鼠裸體的納粹大屠殺書。」',
+      Q1: '水汙染是文中提及之校園問題之一。',
+      Q1_correct_response: 'f',
+      Q2: '作者支持小班教學。',
+      Q2_correct_response: 'f',
+      No: '4',
+      Pattern: '詞內調換*3'
+    },
+
+    {
+      stimulus: '氣候變遷的主要推手是體集企業，例如力電網、工業、規大模農業與運輸系統。在人類排放的溫室氣體中，近半來自於電發與業工使用的石化燃料。',
+      Q1: '開採化石燃料是導致氣候變遷的主要原因。',
+      Q1_correct_response: 'j',
+      Q2: '作者認為溫室氣體都是由工業活動所排放。',
+      Q2_correct_response: 'j',
+      No: '5',
+      Pattern: '詞內調換*6'
+    },
+
+    {
+      stimulus: '新聞養素是媒體素養究研底下的一個分支，用於阻斷陰謀論的播傳，以及培養分辨假新聞的力能。它養培人們具備一套技巧，以斷判新聞與資訊的可信度。',
+      Q1: '新聞素養可阻斷陰謀論的傳播。',
+      Q1_correct_response: 'f',
+      Q2: '媒體素養是新聞素養下的一個分支。',
+      Q2_correct_response: 'j',
+      No: '6',
+      Pattern: '詞內調換*6'
+    },
+
+    {
+      stimulus: '帶熱林雨為什麼會不停消失？為什麼止阻砍伐天林然這麼難？其中一個最重要的原因，就是類人糧食及生存間空的匱乏。',
+      Q1: '作者認為糧食不足為人類砍乏樹林的原因之一。',
+      Q1_correct_response: 'f',
+      Q2: '作者認為熱帶雨林與天然林的消失為氣候變遷所引起。',
+      Q2_correct_response: 'j',
+      No: '7',
+      Pattern: '詞內調換*6'
+    },
+
+    {
+      stimulus: '統計上的似相性未必就表示內容上具有大重意義，兩件經常參照的事物不定一就是對的。例如，全球氣候暖化與活躍的盜海數量減少，在存著驚人的相關性。這種相關性當然純屬合巧。',
+      Q1: '兩件經常相互參照事物且具有統計上的相關性並不代表其具有重大意義。',
+      Q1_correct_response: 'f',
+      Q2: '全球暖化會導致海盜減少。',
+      Q2_correct_response: 'j',
+      No: '8',
+      Pattern: '詞內調換*6'
+    },
+
+    {
+      stimulus: '我們幾乎可以肯定，從服事務業者將步入農工夫人的後塵，大幅度由人系智慧工統取而代之，真人服務也會像難以照顧的銀器、銅器，成為稀有、尊貴的象徵。',
+      Q1: '服務業會慢慢被人工智慧完全取代。',
+      Q1_correct_response: 'j',
+      Q2: '真人服務會變得稀有。',
+      Q2_correct_response: 'f',
+      No: '9',
+      Pattern: '跨詞的文字調換*3'
+    },
+
+    {
+      stimulus: '中文與契洛基語這類聲調語言，利調聲用變化來區分意義，同樣的音以節較高、較低、逐漸上升或下降的聲調發音時，代義的意表都不同。',
+      Q1: '契洛基語中，同樣的音節以不同聲調發音，代表不同的意義。',
+      Q1_correct_response: 'f',
+      Q2: '文中提及的聲調變化包含較高、較低、逐漸上升或下降等聲調。',
+      Q2_correct_response: 'f',
+      No: '10',
+      Pattern: '跨詞的文字調換*3'
+    },
+
+    {
+      stimulus: '科技不斷進步，人類生素質活亦得以提升，但這些享受背後，對能源的需求亦越來越大。傳化統石能源會污環染境，環保新能源例如太陽能、風力發電卻要「望天打卦」。',
+      Q1: '人類生活素質提高，能源需求也日漸提昇。',
+      Q1_correct_response: 'f',
+      Q2: '環保能源明顯優於傳統能源。',
+      Q2_correct_response: 'j',
+      No: '11',
+      Pattern: '跨詞的文字調換*3'
+    },
+
+    {
+      stimulus: '雖然官方未公死布傷人數，但《BBC》引當述地媒體稱，自今年以來，已經有 10 人在這場暴力中喪性失命。對此，當地的居民表示，「這場暴力衝突宛如戰場」。',
+      Q1: '這場暴力衝突中有 10 人受傷。',
+      Q1_correct_response: 'j',
+      Q2: '《BBC》引用官方死亡人數。',
+      Q2_correct_response: 'j',
+      No: '12',
+      Pattern: '跨詞的文字調換*3'
+    },
+
+    {
+      stimulus: '我們若是限制投技減碳資術，將無法大減幅少發電產及各種廠業的碳排放，而且 CCUS 藉由減放碳少排，能締造更大規濟的經模，提就供業機會並從中獲利。',
+      Q1: 'CCUS 會造成失業。',
+      Q1_correct_response: 'j',
+      Q2: '碳排放量受限於減碳技術的投資。',
+      Q2_correct_response: 'f',
+      No: '13',
+      Pattern: '跨詞的文字調換*6'
+    },
+
+    {
+      stimulus: '確實有一項重子因要可以顯著預加增測的成功率，是就那認知的方式：凡知都事道一點的「狐狸」要專比精一門的「刺蝟」表更現好。',
+      Q1: '文中探討增加預測成功率的因子。',
+      Q1_correct_response: 'f',
+      Q2: '文中將凡事都知道一點的人比擬為狐狸，並將專精一門學問的人比擬為刺蝟。',
+      Q2_correct_response: 'f',
+      No: '14',
+      Pattern: '跨詞的文字調換*6'
+    },
+
+    {
+      stimulus: '我在斯里蘭卡的第九天，搭上放著印曲度風的巴士，前幾天的告驗經訴我要先跟車上的售員票問好價錢，親自把登安山包置在後廂車內，最後是上車絕對要靠坐窗的位置。',
+      Q1: '作者沒有在當地搭乘巴士的經驗。',
+      Q1_correct_response: 'j',
+      Q2: '作者認為搭乘巴士時應將登山包置於窗邊。',
+      Q2_correct_response: 'j',
+      No: '15',
+      Pattern: '跨詞的文字調換*6'
+    },
+
+    {
+      stimulus: '台灣因為歷關的史係，存許著在多不語的同言。隨著歷史演進，不同政權的進入帶來不同強勢的語言。而隨強著勢語言的通用，使得原本各族群的母使語用比下例降。',
+      Q1: '文中認為，台灣有許多不同的語言是因為歷史的關係。',
+      Q1_correct_response: 'f',
+      Q2: '政權更替會增加各族群使用母語的比例。',
+      Q2_correct_response: 'j',
+      No: '16',
+      Pattern: '跨詞的文字調換*6'
+    },
+
+    {
+      stimulus: '氣候變遷造成的影響，對世界上一些最族群的脆弱特別嚴重，尤其是依賴農村維生的貧困土地以及許多沿海地區的熱帶居民。',
+      Q1: '氣候變遷對貧困農村影響很大。',
+      Q1_correct_response: 'f',
+      Q2: '沿海居民是脆弱族群之一。',
+      Q2_correct_response: 'f',
+      No: '17',
+      Pattern: '詞的調換*3'
+    },
+
+    {
+      stimulus: '尼安德塔人和我們有共同的祖先，他們強壯、身型發達、肌肉魁梧。他們製造技術的武器精良，能獵捕冰河動物的所有大型哺乳時期。',
+      Q1: '尼安德塔人的武器製造技術良好。',
+      Q1_correct_response: 'f',
+      Q2: '文中提及尼安德塔人擅長獵捕海洋生物。',
+      Q2_correct_response: 'j',
+      No: '18',
+      Pattern: '詞的調換*3'
+    },
+
+    {
+      stimulus: '科學家首次發現從阿波羅計畫帶回的月球植物竟然可以種出土壤。此前，研究人員一直不知道土質極差的月球土壤中，食物是否會發芽、更別說能不能被用來種植植物。',
+      Q1: '科學家認為月球土壤環境適合種植作物。',
+      Q1_correct_response: 'j',
+      Q2: '阿波羅計畫對於月球土質的研究很有幫助。',
+      Q2_correct_response: 'f',
+      No: '19',
+      Pattern: '詞的調換*3'
+    },
+
+    {
+      stimulus: '詹姆士兩歲大了年齡，占據了大半條毯子；威廉雖然年紀比較小，卻十分精明。他強迫睡著先不要自己，等鼾聲詹姆士大作，就把大半毯子都拉到自己這邊。',
+      Q1: '威廉的年紀小於兩歲。',
+      Q1_correct_response: 'j',
+      Q2: '威廉等詹姆士睡著後才拉他的毯子。',
+      Q2_correct_response: 'f',
+      No: '20',
+      Pattern: '詞的調換*3'
+    },
+
+    {
+      stimulus: '新顯示研究，蜂蟹蟎也會改變使用空間的和行為來避免蜜蜂擴散，這種蜜蜂以寄生蟲器官為食，並可能帶有病毒致病的，是蜜蜂威脅最大之一。',
+      Q1: '蜂蟹螨不吃蜜蜂器官。',
+      Q1_correct_response: 'j',
+      Q2: '蜂蟹螨帶有病毒。',
+      Q2_correct_response: 'f',
+      No: '21',
+      Pattern: '詞的調換*6'
+    },
+
+    {
+      stimulus: '艾佛森發現，老鼠完全剝奪受到的睡眠，會在一個月全數內死亡。事實上，她只要不進入睡眠讓老鼠的快速動眼期，就會出現結果致命的這種。',
+      Q1: '艾佛森用老鼠作為睡眠剝奪實驗的材料。',
+      Q1_correct_response: 'f',
+      Q2: '進入快速動眼期與否，會影響到老鼠的性命。',
+      Q2_correct_response: 'f',
+      No: '22',
+      Pattern: '詞的調換*6'
+    },
+
+    {
+      stimulus: '都市主要是由貿易商品、集散地市集所演變而來。藝術品本非城市，而是生活副產物人類的自身。設計甚至主動去管制天際線，以至於機能城市影響時，或許就本末倒置了。',
+      Q1: '作者認為城市應如藝術品一般加以設計、管制。',
+      Q1_correct_response: 'j',
+      Q2: '過度管制城市的樣貌會影響城市本身的機能。',
+      Q2_correct_response: 'f',
+      No: '23',
+      Pattern: '詞的調換*6'
+    },
+
+    {
+      stimulus: '每個人顏色對的主觀都十分感覺，以上的研究發現也仍深入更有待的評估。顏色一種如果能帶給喜悅你、自信或舒適的感覺，就算你身邊的人喜歡太不，也儘管用用看吧。',
+      Q1: '作者認為我們應該多聽其他人對挑選顏色的建議。',
+      Q1_correct_response: 'j',
+      Q2: '大部分人對顏色的感覺大致相同。',
+      Q2_correct_response: 'j',
+      No: '24',
+      Pattern: '詞的調換*6'
+    }
+  ]
+
+  var procedure = {
+    timeline: [
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: '<div style="font-size:60px;">+</div>',
+        choices: "NO_KEYS",
+        trial_duration: 500,
+        post_trial_gap: 100
+      },
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+          var stim = `<p class='stim'>${jsPsych.timelineVariable('stimulus')}</p>`;
+          return stim;
+        },
+        choices: "NO_KEYS",
+        data: {
+          task: 'show_stimulus',
+          correct_response: 'N/A',
+          No: jsPsych.timelineVariable('No')
+        },
+        on_finish: function () {
+          var curr_progress_bar_value = jsPsych.getProgressBarCompleted();
+          jsPsych.setProgressBar(curr_progress_bar_value + (1 / n_trials));
+        },
+        trial_duration: 7000,
+        post_trial_gap: 100
+      },
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+          var stim = `<p class='stim'>${jsPsych.timelineVariable('Q1')}</p>
+                              <p class='nav'>【正確】 F&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;【錯誤】 J</p>`;
+          return stim;
+        },
+        choices: ['f', 'j'],
+        data: {
+          task: 'response',
+          correct_response: jsPsych.timelineVariable('Q1_correct_response'),
+          No: jsPsych.timelineVariable('No')
+        },
+        on_finish: function (data) {
+          data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        },
+        trial_duration: undefined,
+        post_trial_gap: 500
+      },
+      {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+          var stim = `<p class='stim'>${jsPsych.timelineVariable('Q2')}</p>
+                              <p class='nav'>【正確】 F&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;【錯誤】 J</p>`;
+          return stim;
+        },
+        choices: ['f', 'j'],
+        data: {
+          task: 'response',
+          correct_response: jsPsych.timelineVariable('Q2_correct_response'),
+          No: jsPsych.timelineVariable('No')
+        },
+        on_finish: function (data) {
+          data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        },
+        trial_duration: undefined,
+        post_trial_gap: 500
+      }
+    ],
+    timeline_variables: full_stimuli,
+    randomize_order: true
+  }
+  timeline.push(procedure);
+
+  var debrief_block = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: function () {
+
+      var trials = jsPsych.data.get().filter({ task: 'response' });
+      var correct_trials = trials.filter({ correct: true });
+      var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+      // var rt = Math.round(correct_trials.select('rt').mean());
+
+      return `<p class='Instruction'>您的回應正確率為 ${accuracy}%。 </p>
+          <p class='Instruction'>請按下鍵盤任意按鍵。</p>`;
+
+    }
+  };
+  timeline.push(debrief_block);
+
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: false,
+  });
+
+  var export_csv = {
+    type: jsPsychInstructions,
+    pages: [
+      '<p class="Instruction">請按下方「上傳實驗資料」按鈕。<br></p>' +
+      '<p class="Instruction">待按鈕轉為灰色，即可關閉視窗。<br></p>' +
+      '<p class="Instruction">實驗到此完全結束，再次感謝您！</p>' +
+      '<button id="export_button" onclick="Export_csv(); this.onclick=null">上傳實驗資料</button>'
+    ]
+  };
+  timeline.push(export_csv);
+
+  function Export_csv() {
+    // jsPsych.data.get().localSave('csv', 'data.csv');
+    var data = jsPsych.data.get().csv()
+    var url = "https://linguistics-experiment.azurewebsites.net/api/export"
+    let request = new XMLHttpRequest();
+    request.open("POST", url, false);
+    request.send(JSON.stringify({ "data": data }));
+    document.getElementById('export_button').disabled = "true";
+  };
+  jsPsych.run(timeline);
+</script>
+
+</html>
