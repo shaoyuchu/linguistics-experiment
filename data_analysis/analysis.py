@@ -9,6 +9,8 @@ CONDITIONS = [
     "Unordered Words",
 ]
 
+SWAP_NUM = [3, 6]
+
 
 def get_by_paragraph_correctness(data_dir: Path):
     summary_df = pd.DataFrame(columns=list(range(0, 25)))
@@ -40,34 +42,22 @@ def get_by_condition_correctness(para_correctness: pd.DataFrame):
     return df
 
 
-def plot(cond_correctness: pd.DataFrame, image_dir: Path):
+def scatter_plot(cond_correctness: pd.DataFrame, image_dir: Path):
     for cond in CONDITIONS:
         plt.clf()
         plt.title(cond)
-        plt.scatter(
-            [3] * len(cond_correctness),
-            cond_correctness[f"{cond} *3"],
-            alpha=0.02,
-            c="b",
-            linewidths=0,
-        )
-        plt.scatter(
-            [6] * len(cond_correctness),
-            cond_correctness[f"{cond} *6"],
-            alpha=0.02,
-            c="b",
-            linewidths=0,
-        )
-        mean = [
-            np.mean(cond_correctness[f"{cond} *3"]),
-            np.mean(cond_correctness[f"{cond} *6"]),
-        ]
-        std = [
-            np.std(cond_correctness[f"{cond} *3"]),
-            np.std(cond_correctness[f"{cond} *6"]),
-        ]
+        for i in SWAP_NUM:
+            plt.scatter(
+                [i] * len(cond_correctness),
+                cond_correctness[f"{cond} *{i}"],
+                alpha=0.02,
+                linewidths=0,
+                c="b",
+            )
+        mean = [np.mean(cond_correctness[f"{cond} *{i}"]) for i in SWAP_NUM]
+        std = [np.std(cond_correctness[f"{cond} *{i}"]) for i in SWAP_NUM]
         plt.errorbar(
-            [3, 6],
+            SWAP_NUM,
             mean,
             yerr=std,
             # error bar
@@ -81,11 +71,56 @@ def plot(cond_correctness: pd.DataFrame, image_dir: Path):
             marker="o",
             markerfacecolor="none",
         )
-
         plt.xlabel("# of swaps")
-        plt.ylabel("correct ratio")
+        plt.ylabel("Correct ratio")
         plt.ylim([0, 1.1])
-        plt.savefig(image_dir / f"{cond}.png", dpi=300)
+        plt.savefig(image_dir / f"Scatter - {cond}.png", dpi=300)
+
+
+def histogram_by_swap_type(cond_correctness: pd.DataFrame, image_dir: Path):
+    plt.style.use("ggplot")
+    bins = np.linspace(0, 1, num=8)
+    n_user = len(cond_correctness)
+    for cond in CONDITIONS:
+        plt.clf()
+        plt.title(cond)
+        for i in range(2):
+            plt.hist(
+                cond_correctness[f"{cond} *{SWAP_NUM[i]}"],
+                alpha=0.5,
+                label=f"{SWAP_NUM[i]} swaps",
+                bins=bins,
+                # color=COLORS[i],
+                weights=np.ones(n_user) / n_user,
+            )
+        plt.legend(loc="upper left", facecolor="white", edgecolor="none")
+        plt.xlabel("Correct ratio")
+        plt.ylabel("Percentage (%)")
+        plt.ylim([0, 1])
+        plt.savefig(image_dir / f"Histogram - {cond}.png", dpi=300)
+
+
+def histogram_by_num_swap(cond_correctness: pd.DataFrame, image_dir: Path):
+    plt.style.use("ggplot")
+    bins = np.linspace(0, 1, num=8)
+    n_user = len(cond_correctness)
+    for swap_num in ["3", "6"]:
+        plt.clf()
+        plt.title(f"{swap_num} Swaps")
+        for i in range(3):
+            plt.hist(
+                cond_correctness[f"{CONDITIONS[i]} *{swap_num}"],
+                alpha=0.5,
+                label=CONDITIONS[i],
+                bins=bins,
+                # color=COLORS[i],
+                weights=np.ones(n_user) / n_user,
+            )
+        plt.legend(loc="upper left", facecolor="white", edgecolor="none")
+        plt.xlabel("Correct ratio")
+        plt.ylabel("Percentage (%)")
+        plt.ylim([0, 1])
+        plt.savefig(image_dir / f"Histogram - {swap_num} swaps.png", dpi=300)
 
 
 if __name__ == "__main__":
@@ -93,7 +128,9 @@ if __name__ == "__main__":
     image_dir = Path("image")
     para_correctness = get_by_paragraph_correctness(data_dir)
     cond_correctness = get_by_condition_correctness(para_correctness)
-    plot(cond_correctness, image_dir)
+    scatter_plot(cond_correctness, image_dir)
+    histogram_by_swap_type(cond_correctness, image_dir)
+    histogram_by_num_swap(cond_correctness, image_dir)
     for cond in CONDITIONS:
         for num in [" *3", " *6"]:
             data = cond_correctness[cond + num]
