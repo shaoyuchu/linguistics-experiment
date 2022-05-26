@@ -47,17 +47,44 @@ def plot(cond_correctness: pd.DataFrame, image_dir: Path):
         plt.scatter(
             [3] * len(cond_correctness),
             cond_correctness[f"{cond} *3"],
-            alpha=0.2,
+            alpha=0.02,
             c="b",
+            linewidths=0,
         )
         plt.scatter(
             [6] * len(cond_correctness),
             cond_correctness[f"{cond} *6"],
-            alpha=0.2,
+            alpha=0.02,
             c="b",
+            linewidths=0,
         )
+        mean = [
+            np.mean(cond_correctness[f"{cond} *3"]),
+            np.mean(cond_correctness[f"{cond} *6"]),
+        ]
+        std = [
+            np.std(cond_correctness[f"{cond} *3"]),
+            np.std(cond_correctness[f"{cond} *6"]),
+        ]
+        plt.errorbar(
+            [3, 6],
+            mean,
+            yerr=std,
+            # error bar
+            elinewidth=1,
+            ecolor="#b3b3b3",
+            capsize=2,
+            # mean trend
+            c="#b3b3b3",
+            linestyle="--",
+            linewidth="1",
+            marker="o",
+            markerfacecolor="none",
+        )
+
         plt.xlabel("# of swaps")
         plt.ylabel("correct ratio")
+        plt.ylim([0, 1.1])
         plt.savefig(image_dir / f"{cond}.png", dpi=300)
 
 
