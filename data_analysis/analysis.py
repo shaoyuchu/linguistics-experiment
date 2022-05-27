@@ -99,12 +99,12 @@ def histogram_by_swap_type(cond_correctness: pd.DataFrame, image_dir: Path):
                 label=f"{SWAP_NUM[i]} swaps",
                 bins=bins,
                 # color=COLORS[i],
-                weights=np.ones(n_user) / n_user,
+                weights=np.ones(n_user) * 100 / n_user,
             )
         plt.legend(loc="upper left", facecolor="white", edgecolor="none")
         plt.xlabel("Correct ratio")
         plt.ylabel("Percentage (%)")
-        plt.ylim([0, 1])
+        plt.ylim([0, 100])
         plt.savefig(image_dir / f"Histogram - {cond}.png", dpi=300)
 
 
@@ -122,12 +122,12 @@ def histogram_by_num_swap(cond_correctness: pd.DataFrame, image_dir: Path):
                 label=CONDITIONS[i],
                 bins=bins,
                 # color=COLORS[i],
-                weights=np.ones(n_user) / n_user,
+                weights=np.ones(n_user) * 100 / n_user,
             )
         plt.legend(loc="upper left", facecolor="white", edgecolor="none")
         plt.xlabel("Correct ratio")
         plt.ylabel("Percentage (%)")
-        plt.ylim([0, 1])
+        plt.ylim([0, 100])
         plt.savefig(image_dir / f"Histogram - {swap_num} swaps.png", dpi=300)
 
 
