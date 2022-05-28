@@ -6,8 +6,8 @@ from scipy import stats
 from scikit_posthocs import posthoc_dunn
 
 CONDITIONS = [
-    "Unordered Characters (in-word)",
-    "Unordered Characters (cross-word)",
+    "Unordered Characters within Words",
+    "Unordered Characters between Word",
     "Unordered Words",
 ]
 
@@ -141,7 +141,7 @@ def print_statistics(cond_correctness: pd.DataFrame):
             print(f"{col_name}:\tmean = {'%.2f'%mean}, std = {'%.2f'%std}")
 
 
-def compare_median(cond_correctness: pd.DataFrame):
+def compare_swap_types(cond_correctness: pd.DataFrame):
     """Run Kruskal-Wallis test and Dunn's test for post-hoc test.
 
     Test if the median of the correctness is the same for different swap types.
@@ -172,6 +172,23 @@ def compare_median(cond_correctness: pd.DataFrame):
             print("post-hoc Dunn's test:\n", post_hoc < 0.05)
 
 
+def compare_swap_num(cond_accuracy: pd.DataFrame):
+    """Run Mann-Whitney U test.
+
+    Test if the median of the accuracy is the same for different swap types.
+    Note that the statistics are not normally distributed, so we use
+    non-parametric tests.
+    """
+    for cond in CONDITIONS:
+        result = stats.mannwhitneyu(
+            *[cond_correctness[f"{cond} *{SWAP_NUM[i]}"] for i in range(2)]
+        )
+        print(
+            f"Mann-Whitney U test for {cond}: "
+            f"p-value = {'%.2f'%result.pvalue}"
+        )
+
+
 if __name__ == "__main__":
     data_dir = Path("data")
     image_dir = Path("image")
@@ -181,4 +198,5 @@ if __name__ == "__main__":
     histogram_by_swap_type(cond_correctness, image_dir)
     histogram_by_num_swap(cond_correctness, image_dir)
     print_statistics(cond_correctness)
-    compare_median(cond_correctness)
+    compare_swap_types(cond_correctness)
+    compare_swap_num(cond_correctness)
