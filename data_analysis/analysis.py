@@ -2,12 +2,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from collections import Counter
 from scipy import stats
 from scikit_posthocs import posthoc_dunn
 
 CONDITIONS = [
     "Unordered Characters within Words",
-    "Unordered Characters between Word",
+    "Unordered Characters between Words",
     "Unordered Words",
 ]
 
@@ -80,7 +81,7 @@ def scatter_plot(cond_correctness: pd.DataFrame, image_dir: Path):
             markerfacecolor="none",
         )
         plt.xlabel("# of swaps")
-        plt.ylabel("Correct ratio")
+        plt.ylabel("Accuracy")
         plt.ylim([0, 1.1])
         plt.savefig(image_dir / f"Scatter - {cond}.png", dpi=300)
 
@@ -91,21 +92,68 @@ def histogram_by_swap_type(cond_correctness: pd.DataFrame, image_dir: Path):
     n_user = len(cond_correctness)
     for cond in CONDITIONS:
         plt.clf()
-        plt.title(cond)
+        plt.title(cond, pad=20)
         for i in range(2):
             plt.hist(
                 cond_correctness[f"{cond} *{SWAP_NUM[i]}"],
                 alpha=0.5,
                 label=f"{SWAP_NUM[i]} swaps",
                 bins=bins,
-                # color=COLORS[i],
                 weights=np.ones(n_user) * 100 / n_user,
             )
         plt.legend(loc="upper left", facecolor="white", edgecolor="none")
-        plt.xlabel("Correct ratio")
+        plt.xlabel("Accuracy")
         plt.ylabel("Percentage (%)")
         plt.ylim([0, 100])
         plt.savefig(image_dir / f"Histogram - {cond}.png", dpi=300)
+
+
+def bar_plot_by_swap_type(cond_correctness: pd.DataFrame, image_dir: Path):
+    plt.style.use("ggplot")
+    n_user = len(cond_correctness)
+    accuracy = np.arange(0, 1.125, 0.125)
+    for cond in CONDITIONS:
+        plt.clf()
+        data = pd.DataFrame(index=accuracy)
+        for i in range(2):
+            count = Counter(cond_correctness[f"{cond} *{SWAP_NUM[i]}"])
+            total = np.array(list(count[acc] for acc in accuracy))
+            percentage = total * 100 / n_user
+            data[f"{SWAP_NUM[i]} Swaps"] = percentage
+        data.plot(kind="bar", width=0.8)
+        plt.legend(loc="upper left", facecolor="white", edgecolor="none")
+        plt.title(cond, pad=20)
+        # plt.xlabel("Accuracy")
+        # plt.ylabel("Percentage (%)")
+        plt.ylim([0, 50])
+        plt.xticks(rotation=45)
+        plt.savefig(image_dir / f"Bar Plot - {cond}.png", dpi=300)
+
+
+def line_plot_by_num_swap(cond_correctness: pd.DataFrame, image_dir: Path):
+    plt.style.use("ggplot")
+    n_user = len(cond_correctness)
+    accuracy = np.arange(0, 1.125, 0.125)
+    for swap_num in SWAP_NUM:
+        plt.clf()
+        plt.title(
+            f"Accuracy Distribution of Different Swap Types ({swap_num} swaps)",
+            pad=20,
+        )
+        for i in range(3):
+            count = Counter(cond_correctness[f"{CONDITIONS[i]} *{swap_num}"])
+            total = np.array(list(count[acc] for acc in accuracy))
+            percentage = total * 100 / n_user
+            plt.plot(
+                accuracy,
+                percentage,
+                label=CONDITIONS[i],
+            )
+        plt.legend(loc="upper left", facecolor="white", edgecolor="none")
+        plt.xlabel("Accuracy")
+        plt.ylabel("Percentage (%)")
+        plt.ylim([0, 100])
+        plt.savefig(image_dir / f"Line - {swap_num} swaps.png", dpi=300)
 
 
 def histogram_by_num_swap(cond_correctness: pd.DataFrame, image_dir: Path):
@@ -114,21 +162,48 @@ def histogram_by_num_swap(cond_correctness: pd.DataFrame, image_dir: Path):
     n_user = len(cond_correctness)
     for swap_num in SWAP_NUM:
         plt.clf()
-        plt.title(f"{swap_num} Swaps")
+        plt.title(
+            f"Accuracy Distribution of Different Swap Types ({swap_num} swaps)",
+            pad=20,
+        )
         for i in range(3):
             plt.hist(
                 cond_correctness[f"{CONDITIONS[i]} *{swap_num}"],
                 alpha=0.5,
                 label=CONDITIONS[i],
                 bins=bins,
-                # color=COLORS[i],
                 weights=np.ones(n_user) * 100 / n_user,
             )
         plt.legend(loc="upper left", facecolor="white", edgecolor="none")
-        plt.xlabel("Correct ratio")
+        plt.xlabel("Accuracy")
         plt.ylabel("Percentage (%)")
         plt.ylim([0, 100])
         plt.savefig(image_dir / f"Histogram - {swap_num} swaps.png", dpi=300)
+
+
+def bar_plot_by_num_swap(cond_correctness: pd.DataFrame, image_dir: Path):
+    plt.style.use("ggplot")
+    n_user = len(cond_correctness)
+    accuracy = np.arange(0, 1.125, 0.125)
+    for swap_num in SWAP_NUM:
+        plt.clf()
+        data = pd.DataFrame(index=accuracy)
+        for i in range(3):
+            count = Counter(cond_correctness[f"{CONDITIONS[i]} *{swap_num}"])
+            total = np.array(list(count[acc] for acc in accuracy))
+            percentage = total * 100 / n_user
+            data[CONDITIONS[i]] = percentage
+        data.plot(kind="bar", width=0.8)
+        plt.legend(loc="upper left", facecolor="white", edgecolor="none")
+        plt.title(
+            f"Accuracy Distribution of Different Swap Types",
+            pad=20,
+        )
+        # plt.xlabel("Accuracy")
+        # plt.ylabel("Percentage (%)")
+        plt.ylim([0, 50])
+        plt.xticks(rotation=45)
+        plt.savefig(image_dir / f"Bar Plot - {swap_num} swaps.png", dpi=300)
 
 
 def print_statistics(cond_correctness: pd.DataFrame):
@@ -169,10 +244,11 @@ def compare_swap_types(cond_correctness: pd.DataFrame):
                 ],
                 p_adjust="bonferroni",
             )
-            print("post-hoc Dunn's test:\n", post_hoc < 0.05)
+            # print("post-hoc Dunn's test:\n", post_hoc < 0.05)
+            print("post-hoc Dunn's test:\n", post_hoc)
 
 
-def compare_swap_num(cond_accuracy: pd.DataFrame):
+def compare_swap_num(cond_correctness: pd.DataFrame):
     """Run Mann-Whitney U test.
 
     Test if the median of the accuracy is the same for different swap types.
@@ -197,6 +273,9 @@ if __name__ == "__main__":
     scatter_plot(cond_correctness, image_dir)
     histogram_by_swap_type(cond_correctness, image_dir)
     histogram_by_num_swap(cond_correctness, image_dir)
+    line_plot_by_num_swap(cond_correctness, image_dir)
+    bar_plot_by_num_swap(cond_correctness, image_dir)
+    bar_plot_by_swap_type(cond_correctness, image_dir)
     print_statistics(cond_correctness)
     compare_swap_types(cond_correctness)
     compare_swap_num(cond_correctness)
